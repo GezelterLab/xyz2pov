@@ -101,7 +101,7 @@ depend: Make.dep
 
 libpovtools.a: $(LIB_OBJS)
 	$(RM) $@
-	$(AR) cr $@ $(OBJS)
+	$(AR) cr $@ $(LIB_OBJS)
 	$(RANLIB) $@
 
 xyz2pov$(EXE) : $(XYZ_OBJS) $(POVTOOLS_LIB)

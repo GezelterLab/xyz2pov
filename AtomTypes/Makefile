@@ -16,7 +16,7 @@ all: dummy
 install : 
 	$(MKINSTALLDIRS) $(ATOMTYPES_DIR)
 	for i in $(TYPE_FILES); do \
-	  echo "Installing $$i in $(ATOMTYPES_DIR)\n"; \
+	  echo "Installing $$i in $(ATOMTYPES_DIR)"; \
 	  $(INSTALL_DATA) $$i $(ATOMTYPES_DIR)/$$i; \
 	done
 
