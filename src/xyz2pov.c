@@ -51,7 +51,7 @@ int main(argc, argv)
   double diagonal; /* the diagonal length of the sim box */
 
   unsigned int n_atoms; /*the number of atoms in each time step */
-  char read_buffer[120]; /*the line buffer for reading */
+  char read_buffer[2000]; /*the line buffer for reading */
   char *eof_test; /*ptr to see when we reach the end of the file */
   char *foo; /*the pointer to the current string token */
   FILE *in_file; /* the input file */
@@ -271,7 +271,7 @@ int main(argc, argv)
     out_prefix = strtok(in_name, ".");
   }
 
-  sprintf( out_format, "%s%s%%0%dd.pov", pov_dir, out_prefix, nZeroes );
+  sprintf( out_format, "%s%s-%%0%dd.pov", pov_dir, out_prefix, nZeroes );
 
   // start reading the first frame
 
@@ -303,69 +303,69 @@ int main(argc, argv)
     if( draw_box ){
       foo = strtok(read_buffer, " ,;\t");
       if(foo == NULL){
-	printf("error in reading file\n");
+	printf("error in reading file time\n");
 	exit(8);
       }
       
       foo = strtok(NULL, " ,;\t");
       if(foo == NULL){
-	printf("error in reading file\n");
+	printf("error in reading file h00\n");
 	exit(8);
       }
       current_frame->Hmat[0][0] = atof( foo );
 
       foo = strtok(NULL, " ,;\t");
       if(foo == NULL){
-	printf("error in reading file\n");
+	printf("error in reading file h10\n");
 	exit(8);
       }
       current_frame->Hmat[1][0] = atof( foo );
 
       foo = strtok(NULL, " ,;\t");
       if(foo == NULL){
-	printf("error in reading file\n");
+	printf("error in reading file h20\n");
 	exit(8);
       }
       current_frame->Hmat[2][0] = atof( foo );
 
       foo = strtok(NULL, " ,;\t");
       if(foo == NULL){
-	printf("error in reading file\n");
+	printf("error in reading file h01\n");
 	exit(8);
       }
       current_frame->Hmat[0][1] = atof( foo );
 
       foo = strtok(NULL, " ,;\t");
       if(foo == NULL){
-	printf("error in reading file\n");
+	printf("error in reading file h11\n");
 	exit(8);
       }
       current_frame->Hmat[1][1] = atof( foo );
 
       foo = strtok(NULL, " ,;\t");
       if(foo == NULL){
-	printf("error in reading file\n");
+	printf("error in reading file h21\n");
 	exit(8);
       }
       current_frame->Hmat[2][1] = atof( foo );
 
       foo = strtok(NULL, " ,;\t");
       if(foo == NULL){
-	printf("error in reading file\n");
+	printf("error in reading file h02\n");
 	exit(8);
       }
       current_frame->Hmat[0][2] = atof( foo );
 
       foo = strtok(NULL, " ,;\t");
       if(foo == NULL){
-	printf("error in reading file\n");
+	printf("error in reading file h12\n");
 	exit(8);
       }
       current_frame->Hmat[1][2] = atof( foo );
 
       foo = strtok(NULL, " ,;\t");
       if(foo == NULL){
-	printf("error in reading file\n");
+	printf("error in reading file h22\n");
 	exit(8);
       }
       current_frame->Hmat[2][2] = atof( foo );
@@ -376,13 +376,13 @@ int main(argc, argv)
       
       eof_test = fgets(read_buffer, sizeof(read_buffer), in_file);
       if(eof_test == NULL){
-	printf("error in reading file\n");
+	printf("error in reading file line at atom %d\n", i);
 	exit(8);
       }
 
       foo = strtok(read_buffer, " ,;\t");
       if(foo == NULL){
-	printf("error in reading file\n");
+	printf("error in reading atom %d name\n", i);
 	exit(8);
       }
       (void)strcpy(current_frame->r[i].name, foo); /*copy the atom name */
@@ -391,7 +391,7 @@ int main(argc, argv)
       
       foo = strtok(NULL, " ,;\t");
       if(foo == NULL){
-	printf("error in reading file\n");
+	printf("error in reading atom %d position x\n", i);
 	exit(8);
       }
       (void)sscanf(foo, "%lf",&current_frame->r[i].x);
@@ -401,7 +401,7 @@ int main(argc, argv)
   
       foo = strtok(NULL, " ,;\t");
       if(foo == NULL){
-	printf("error in reading file\n");
+	printf("error in reading atom %d position y\n", i);
 	exit(8);
       }
       (void)sscanf(foo, "%lf", &current_frame->r[i].y);
@@ -411,7 +411,7 @@ int main(argc, argv)
 
       foo = strtok(NULL, " ,;\t");
       if(foo == NULL){
-	printf("error in reading file\n");
+	printf("error in reading atom %d position z\n", i);
 	exit(8);
       }
       (void)sscanf(foo, "%lf", &current_frame->r[i].z);

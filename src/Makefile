@@ -22,15 +22,11 @@ CFLAGS=$(CFLAGS_C) $(INCLUDES) $(DECLARES)
 DEPFLAGS=$(CFLAGS_C) -I.
 
 XYZ2POV=xyz2pov$(EXE)
-POV2ANIM=pov2anim$(EXE)
 
 POVTOOLS_LIB = libpovtools.a
 
 XYZ2POV_LDFLAGS= -L.
 XYZ2POV_LDADD= -lpovtools -lm
-
-POV2ANIM_LDFLAGS= -L.
-POV2ANIM_LDADD= -lpovtools -lm
 
 PREFS=-DXYZ2POV_HOME="$(XYZ2POV_HOME)"
 
@@ -58,11 +54,6 @@ XYZC_FILES = \
 
 XYZCXX_FILES = 
 
-ANIMC_FILES = \
-	$(DIR)/pov2anim.c
-
-ANIMCXX_FILES = 
-
 DIR:=.
 LIBC_SRCS   :=   $(LIBC_FILES)
 LIBCXX_SRCS :=	 $(LIBCXX_FILES)
@@ -73,12 +64,7 @@ XYZC_SRCS   :=  $(XYZC_FILES)
 XYZCXX_SRCS :=	$(XYZCXX_FILES)
 XYZ_SRCS    :=  $(XYZC_SRCS) $(XYZCXX_SRCS)
 
-DIR:=.
-ANIMC_SRCS   :=  $(ANIMC_FILES)
-ANIMCXX_SRCS :=	 $(ANIMCXX_FILES)
-ANIM_SRCS    :=  $(ANIMC_SRCS) $(ANIMCXX_SRCS)
-
-SRCS := $(LIB_SRCS) $(XYZ_SRCS) $(ANIM_SRCS)
+SRCS := $(LIB_SRCS) $(XYZ_SRCS)
 
 DIR:=obj
 LIBC_OBJS   :=     $(LIBC_FILES:.c=.o)
@@ -90,14 +76,9 @@ XYZC_OBJS   :=  $(XYZC_FILES:.c=.o)
 XYZCXX_OBJS :=	$(XYZCXX_FILES:.cpp=.o)
 XYZ_OBJS    :=  $(XYZC_OBJS) $(XYZCXX_OBJS)
 
-DIR:=obj
-ANIMC_OBJS   :=   $(ANIMC_FILES:.c=.o)
-ANIMCXX_OBJS :=	  $(ANIMCXX_FILES:.cpp=.o)
-ANIM_OBJS    :=   $(ANIMC_OBJS) $(ANIMCXX_OBJS)
-
 LIBSUBDIRS = obj
 
-all : Make.dep $(POVTOOLS_LIB) $(POV2ANIM) $(XYZ2POV)
+all : Make.dep $(POVTOOLS_LIB) $(XYZ2POV)
 
 depend: Make.dep
 
@@ -109,27 +90,18 @@ libpovtools.a: $(LIB_OBJS)
 xyz2pov$(EXE) : $(XYZ_OBJS) $(POVTOOLS_LIB)
 	$(CC) $(CFLAGS) $(XYZ_OBJS) -o $@ $(XYZ2POV_LDFLAGS) $(XYZ2POV_LDADD)
 
-pov2anim$(EXE) : $(ANIM_OBJS) $(POVTOOLS_LIB)
-	$(CC) $(CFLAGS) $(ANIM_OBJS) -o $@ $(POV2ANIM_LDFLAGS) $(POV2ANIM_LDADD)
-
-install :  $(POV2ANIM) $(XYZ2POV)
+install : $(XYZ2POV)
 	$(MKINSTALLDIRS) $(XYZ2POV_HOME)/bin
 	$(INSTALL_PROGRAM) -s $(XYZ2POV) $(XYZ2POV_HOME)/bin/$(XYZ2POV)
-	$(INSTALL_PROGRAM) -s $(POV2ANIM) $(XYZ2POV_HOME)/bin/$(POV2ANIM)
 
 tests : dummy
 
 $(XYZ2POV_HOME)/bin/$(XYZ2POV) : $(XYZ2POV)
 	$(MAKE) install
 
-$(XYZ2POV_HOME)/bin/$(POV2ANIM) : $(POV2ANIM)
-	$(MAKE) install
-
-links : $(XYZ2POV_HOME)/bin/$(XYZ2POV) $(XYZ2POV_HOME)/bin/$(POV2ANIM)
+links : $(XYZ2POV_HOME)/bin/$(XYZ2POV)
 	$(MKINSTALLDIRS) $(PREFIX)/bin
 	cd $(PREFIX)/bin; $(RM) $(XYZ2POV); $(LN_S) $(XYZ2POV_HOME)/bin/$(XYZ2POV) $(XYZ2POV)
-	cd $(PREFIX)/bin; $(RM) $(POV2ANIM); $(LN_S) $(XYZ2POV_HOME)/bin/$(POV2ANIM) $(POV2ANIM)
-
 
 # cleaning
 
@@ -139,13 +111,13 @@ clean : dummy
 	for i in $(LIBSUBDIRS); do \
 	  (cd $$i; $(RM) *.o) || exit 1; \
 	done
-	$(RM) $(POVTOOLS_LIB) $(XYZ2POV) $(ANIM2POV) *.o *~ Make.temp
+	$(RM) $(POVTOOLS_LIB) $(XYZ2POV) *.o *~ Make.temp
 
 distclean : dummy
 	for i in $(LIBSUBDIRS); do \
 	  (cd $$i; $(RM) *.o) || exit 1; \
 	done
-	$(RM) $(POVTOOLS_LIB) $(XYZ2POV) $(ANIM2POV) *.o *~ Make.temp Make.dep
+	$(RM) $(POVTOOLS_LIB) $(XYZ2POV) *.o *~ Make.temp Make.dep
 
 devclean : distclean
 
