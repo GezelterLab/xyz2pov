@@ -4,6 +4,9 @@
 
 #include "atom_parser.h"
 
+#define MK_STR(s) # s
+#define STR_DEFINE(t, s) t = MK_STR(s)
+
 
 struct linked_atom *head_main;
 struct linked_atom *head_inUse;
@@ -18,7 +21,10 @@ void initializeParser(){
   const int buffer_size = 300;
   char lineBuffer[buffer_size]; 
   
-  char *in_filename;
+  char in_filenameStd[500];
+  char tempString[500];
+  char *atPath;
+  char *in_filenameSet;
   char *in_file_env = "_xyz2pov_AtomTypes_";
   FILE *in_file;
 
@@ -30,16 +36,53 @@ void initializeParser(){
 
   n_inUse = 0;
 
-  in_filename = getenv(in_file_env);
-
-  in_file = fopen(in_filename, "r");
-
-  if(in_file == NULL){
-
-    printf("Error reading AtomTypes file, is the _xyz2pov_AtomTypes_\n"
-	   "enviorment variable set?\n");
-    exit(8);
+  // generate the AtomTypes Name
+    
+  strcpy( in_filenameStd, "AtomTypes" ); 
+  
+  // attempt to open the file in the current directory first.
+  
+  in_file = fopen( in_filenameStd, "r" );
+  
+  if( in_file == NULL ){
+    
+    // next see if the force path enviorment variable is set
+    
+    in_filenameSet = getenv( in_file_env );
+    if( in_filenameSet != NULL ) {
+      
+      in_file = fopen(in_filenameSet, "r");
+      
+      if(in_file == NULL){
+	
+	fprintf(stderr,
+		"Error reading AtomTypes file. The _xyz2pov_AtomTypes_\n"
+		"enviorment variable was set incorrectly.\n");
+	exit(8);
+      }
+    }
+    else{
+      STR_DEFINE(atPath, TYPES_PATH );      
+      
+      strcpy( tempString, atPath );
+      strcat( tempString, "/" );
+      strcat( tempString, in_filenameStd );
+      strcpy( in_filenameStd, tempString );
+      
+      in_file = fopen( in_filenameStd, "r" );
+      
+      if( in_file == NULL ){
+	
+	fprintf(stderr,
+		"Error opening the AtomTypes definition file: %s\n"
+		"Have you tried setting the _xyz2pov_AtomTypes_ environment "
+		"vairable?\n",
+		in_filenameStd );
+	exit(8);
+      }
+    }
   }
+   
   
   while(fgets(lineBuffer, sizeof(lineBuffer), in_file) != NULL){
     

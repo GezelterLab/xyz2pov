@@ -36,11 +36,13 @@ PREFS=-DXYZ2POV_HOME="$(XYZ2POV_HOME)"
 
 # Then do the compile rules:
 
+SRCPATH=$(PWD)
+
 obj/%.o: %.cpp
-	cd obj; $(CXX) $(CXXFLAGS) -c ../$<
+	cd obj; $(CXX) $(CXXFLAGS) -c $(SRCPATH)/$<
 
 obj/%.o: %.c
-	cd obj; $(CC) $(CFLAGS) -c ../$<
+	cd obj; $(CC) $(CFLAGS) -c $(SRCPATH)/$<
 
 # Then list what we have to compile
 
@@ -151,7 +153,7 @@ Make.dep : $(SRCS)
 	echo "# DO NOT DELETE THIS LINE - used by make depend" > Make.dep
 	$(CC) $(DEPFLAGS) -MM $(SRCS) \
 		| sed 's/\.o:/\$$(O)\ :/g' > Make.temp
-	cat Make.temp | sed 's/^/obj\//' >> Make.dep
+	cat Make.temp | sed 's/^[0-9a-zA-Z]/obj\/&/' >> Make.dep
 	$(RM) Make.temp
 
 tags : $(SRCS)
