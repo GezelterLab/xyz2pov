@@ -1,5 +1,5 @@
 #####################################################
-# Top-level Makefile for Grace                      #
+# Top-level Makefile for xyz2pov                    #
 #####################################################
 # You should not change anything here.              #
 #####################################################
