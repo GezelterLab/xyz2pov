@@ -167,6 +167,8 @@ int main(argc, argv)
     mkdir(ANIM_DIR, dir_mode);
   }
 
+  if(!compression) strcat(pov_flags, " +FT ");
+
   strcpy(anim_dir, ANIM_DIR); strcat(anim_dir, "/");
   strcpy(pov_dir, POV_DIR); strcat(pov_dir, "/");
 
