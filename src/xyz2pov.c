@@ -457,14 +457,14 @@ int main(argc, argv)
 		     "makePeriodicBox( %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf)\n"
 		     "\n",
                      temp_frame->Hmat[0][0] + dm[0][0] * (i+1),
-                     temp_frame->Hmat[1][0] + dm[1][0] * (i+1),
                      temp_frame->Hmat[2][0] + dm[2][0] * (i+1),
+                     temp_frame->Hmat[1][0] + dm[1][0] * (i+1),
                      temp_frame->Hmat[0][1] + dm[0][1] * (i+1),
-                     temp_frame->Hmat[1][1] + dm[1][1] * (i+1),
                      temp_frame->Hmat[2][1] + dm[2][1] * (i+1),
+                     temp_frame->Hmat[1][1] + dm[1][1] * (i+1),
                      temp_frame->Hmat[0][2] + dm[0][2] * (i+1),
-                     temp_frame->Hmat[1][2] + dm[1][2] * (i+1),
-                     temp_frame->Hmat[2][2] + dm[2][2] * (i+1) );
+                     temp_frame->Hmat[2][2] + dm[2][2] * (i+1),
+                     temp_frame->Hmat[1][2] + dm[1][2] * (i+1) );
 	  }
 	  
 	  
@@ -514,14 +514,14 @@ int main(argc, argv)
 		 "makePeriodicBox( %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf %lf )\n"
 		 "\n",
 		 current_frame->Hmat[0][0],
-		 current_frame->Hmat[1][0],
 		 current_frame->Hmat[2][0],
+		 current_frame->Hmat[1][0],
 		 current_frame->Hmat[0][1],
-		 current_frame->Hmat[1][1],
 		 current_frame->Hmat[2][1],
+		 current_frame->Hmat[1][1],
 		 current_frame->Hmat[0][2],
-		 current_frame->Hmat[1][2],
-		 current_frame->Hmat[2][2] );
+		 current_frame->Hmat[2][2],
+		 current_frame->Hmat[1][2] );
       }
       
       
@@ -709,30 +709,34 @@ int main(argc, argv)
 	    "\n"
 	    "#macro makePeriodicBox( bx1, by1, bz1, bx2, by2, bz2, bx3, by3, bz3 )\n"
 	    "\n"
-	    "  #local pAx = -boxCenterX;\n"
-	    "  #local pAy = -boxCenterY;\n"
-	    "  #local pAz = -boxCenterZ;\n"
-	    "  #local pBx = bx1 - boxCenterX;\n"
-	    "  #local pBy = by1 - boxCenterY;\n"
-	    "  #local pBz = bz1 - boxCenterZ;\n"
-	    "  #local pCx = bx2 - boxCenterX;\n"
-	    "  #local pCy = by2 - boxCenterY;\n"
-	    "  #local pCz = bz2 - boxCenterZ;\n"
-	    "  #local pDx = bx3 - boxCenterX;\n"
-	    "  #local pDy = by3 - boxCenterY;\n"
-	    "  #local pDz = bz3 - boxCenterZ;\n"
-	    "  #local pEx = bx1 + bx2 - boxCenterX;\n"
-	    "  #local pEy = by1 + by2 - boxCenterY;\n"
-	    "  #local pEz = bz1 + bz2 - boxCenterZ;\n"
-	    "  #local pFx = bx1 + bx3 - boxCenterX;\n"
-	    "  #local pFy = by1 + by3 - boxCenterY;\n"
-	    "  #local pFz = bz1 + bz3 - boxCenterZ;\n"
-	    "  #local pGx = bx2 + bx3 - boxCenterX;\n"
-	    "  #local pGy = by2 + by3 - boxCenterY;\n"
-	    "  #local pGz = bz2 + bz3 - boxCenterZ;\n"
-	    "  #local pHx = bx1 + bx2 + bx3 - boxCenterX;\n"
-	    "  #local pHy = by1 + by2 + by3 - boxCenterY;\n"
-	    "  #local pHz = bz1 + bz2 + bz3 - boxCenterZ;\n"
+	    "  #local bcx = (bx1 + bx2 + bx3) / 2.0;\n"
+	    "  #local bcy = (by1 + by2 + by3) / 2.0;\n"
+	    "  #local bcz = (bz1 + bz2 + bz3) / 2.0;\n"
+	    "\n"
+	    "  #local pAx = boxCenterX - bcx;\n"
+	    "  #local pAy = boxCenterY - bcy;\n"
+	    "  #local pAz = boxCenterZ - bcz;\n"
+	    "  #local pBx = boxCenterX + bx1 - bcx;\n"
+	    "  #local pBy = boxCenterY + by1 - bcy;\n"
+	    "  #local pBz = boxCenterZ + bz1 - bcz;\n"
+	    "  #local pCx = boxCenterX + bx2 - bcx;\n"
+	    "  #local pCy = boxCenterY + by2 - bcy;\n"
+	    "  #local pCz = boxCenterZ + bz2 - bcz;\n"
+	    "  #local pDx = boxCenterX + bx3 - bcx;\n"
+	    "  #local pDy = boxCenterY + by3 - bcy;\n"
+	    "  #local pDz = boxCenterZ + bz3 - bcz;\n"
+	    "  #local pEx = boxCenterX + bx1 + bx2 - bcx;\n"
+	    "  #local pEy = boxCenterY + by1 + by2 - bcy;\n"
+	    "  #local pEz = boxCenterZ + bz1 + bz2 - bcz;\n"
+	    "  #local pFx = boxCenterX + bx1 + bx3 - bcx;\n"
+	    "  #local pFy = boxCenterY + by1 + by3 - bcy;\n"
+	    "  #local pFz = boxCenterZ + bz1 + bz3 - bcz;\n"
+	    "  #local pGx = boxCenterX + bx2 + bx3 - bcx;\n"
+	    "  #local pGy = boxCenterY + by2 + by3 - bcy;\n"
+	    "  #local pGz = boxCenterZ + bz2 + bz3 - bcz;\n"
+	    "  #local pHx = boxCenterX + bx1 + bx2 + bx3 - bcx;\n"
+	    "  #local pHy = boxCenterY + by1 + by2 + by3 - bcy;\n"
+	    "  #local pHz = boxCenterZ + bz1 + bz2 + bz3 - bcz;\n"
 	    "\n"
 	    "  #local colorR = 0.90;\n"
 	    "  #local colorG = 0.91;\n"
