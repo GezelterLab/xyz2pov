@@ -1,0 +1,40 @@
+****************************
+* To Install :             *
+****************************
+
+Run:
+	./configure
+
+This script will determine your site specific installation
+preferences. If you wnat to fiddle with the compiler flags, you can
+edit them in the Make.conf file. Otherwise simply give them to
+configure when you run the script.
+
+Next simply run:
+
+	make
+
+This will compile all of the source files. To install them into the
+xyz2pov's home directory run:
+	
+	make install
+
+Finally:
+	
+	make links
+
+will create links to the executables in $(prefix)/bin
+
+
+******************************
+* Usage                      *
+******************************
+
+At its simplest, run:
+
+	xyz2pov -a <xyzFile>
+
+The -a flag will output the atoms into the povray scripts. For a full
+description of all of the flags, run:
+
+	xyz2pov -h

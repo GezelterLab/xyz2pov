@@ -13,12 +13,12 @@ all : subdirs
 
 install : subdirs
 	@set -e; for i in $(SUBDIRS); do (cd $$i; $(MAKE) install) || exit 1; done
-	$(MKINSTALLDIRS) $(XYZ2POV_HOME)
-#	$(INSTALL_DATA) README $(OOPSE_HOME)
-#	$(INSTALL_DATA) LICENSE $(OOPSE_HOME)
-#	$(INSTALL_DATA) NEWS $(OOPSE_HOME)
-#	$(INSTALL_DATA) AUTHORS $(OOPSE_HOME)
-	$(INSTALL_DATA) ChangeLog $(OOPSE_HOME)
+#	$(MKINSTALLDIRS) $(XYZ2POV_HOME)
+#	$(INSTALL_DATA) README $(XYZ2POV_HOME)
+#	$(INSTALL_DATA) LICENSE $(XYZ2POV_HOME)
+#	$(INSTALL_DATA) NEWS $(XYZ2POV_HOME)
+#	$(INSTALL_DATA) AUTHORS $(XYZ2POV_HOME)
+#	$(INSTALL_DATA) ChangeLog $(XYZ2POV_HOME)
 
 tests : subdirs
 	@set -e; for i in $(SUBDIRS); do (cd $$i; $(MAKE) tests) || exit 1; done
