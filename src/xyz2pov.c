@@ -511,7 +511,7 @@ int main(argc, argv)
       if( draw_box ){
 	
 	fprintf( out_file,
-		 "makePeriodicBox( %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf %lf )\n"
+		 "makePeriodicBox( %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf )\n"
 		 "\n",
 		 current_frame->Hmat[0][0],
 		 current_frame->Hmat[2][0],
