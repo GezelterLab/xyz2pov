@@ -1,12 +1,30 @@
 #!/bin/bash
 
-mkdir -p anim
-for povScript in ./pov/${1}*.pov
-do
-  povName=`basename $povScript`
-  pictName=./anim/${povName%.pov}.png
+if [ -d ./pov ]
+then
+	if [ -n $1 ]
+	then
+		povBase=`basename $1`
+		echo "Rendering all $povBase scripts"
+		echo
+	else
+		povBase=""
+		echo "Rendering all scripts in the pov/ directory"
+		echo
+	fi
+	
+	mkdir -p anim
   
-  echo "x-povray +I${povScript} +O${pictName} +W800 +H600 +FN -D"
-  x-povray +I${povScript} +O${pictName} +W800 +H600 +FN -D
+	for povScript in ./pov/${povBase}*.pov
+	do
+		povName=`basename $povScript`
+		pictName=./anim/${povName%.pov}.png
+  
+		echo "x-povray +I${povScript} +O${pictName} +W800 +H600 +FN -D"
+		x-povray +I${povScript} +O${pictName} +W800 +H600 +FN -D
+	done
 
-done
+else
+
+	echo ".pov directory does not exist. Do you really have scripts to render?"
+fi
