@@ -1,0 +1,167 @@
+dnl **** Process this file with autoconf to produce a configure script.
+
+AC_INIT(src/xyz2pov.c)
+AC_CONFIG_AUX_DIR(ac-tools)
+
+AC_PREFIX_DEFAULT("/usr/local")
+
+builtin(include, ac-tools/aclocal.m4)
+
+AC_PROG_RANLIB
+AC_PROG_LN_S
+
+AC_SUBST(EXEEXT)
+AC_SUBST(OBJEXT)
+AC_SUBST(BATEXT)
+
+AC_SUBST(MKINSTALLDIRS)
+
+AC_SUBST(XYZ2POV)
+AC_SUBST(XYZ2POV_HOME)
+AC_SUBST(SUBDIRS)
+
+OOPSE=xyz2pov
+
+dnl **** define home dir of xyz2pov
+if test "x${prefix}" = "xNONE"
+then
+  XYZ2POV_HOME=${ac_default_prefix}/xyz2pov
+else
+  XYZ2POV_HOME=${prefix}/xyz2pov
+fi
+AC_ARG_ENABLE(xyz2pov-home,
+[  --enable-xyz2pov-home=DIR      define xyz2pov home dir [PREFIX/xyz2pov]],
+[XYZ2POV_HOME="${enableval}"])
+
+dnl **** define C compiler
+CC=${CC-icc}
+AC_ARG_WITH(cc,
+[  --with-cc=PROG               use PROG as C compiler [${CC-icc}]],
+[CC="${withval}"])
+AC_PROG_CC([icc gcc cc])
+
+dnl **** define C compiler
+CXX=${CXX-icc}
+AC_ARG_WITH(cxx,
+[  --with-cxx=PROG               use PROG as C++ compiler [${CXX-icc}]],
+[CXX="${withval}"])
+AC_PROG_CXX([icc g++ c++])
+
+dnl **** check if user wants to compile with debugging support
+AC_ARG_ENABLE(debug,
+[  --enable-debug               turn on debugging [no]],
+[case "${enableval}" in
+  yes) debug=true ;;
+  no)  debug=false ;;
+  *) AC_MSG_ERROR(bad value ${enableval} for --enable-debug) ;;
+esac],[debug=false])
+
+
+dnl **** Define CFLAGS etc empty to prevent configure from setting them
+CFLAGS=${CFLAGS-""}
+LDFLAGS=${LDFLAGS-""}
+OPTIMIZE=${OPTIMIZE-""}
+DEBUG=${DEBUG-""}
+
+
+dnl **** Check for host type
+AC_CANONICAL_HOST
+
+
+if test "x${CFLAGS}" = "x"
+then
+  if test "x${GCC}" = "xyes"
+  then
+    dnl **** default settings for gcc
+    DEBUG="-g -O2"
+    OPTIMIZE="-O2"
+    CFLAGS="-fno-common -Wall -pedantic -Wpointer-arith -Wnested-externs"
+
+    dnl **** check for strength-reduce bug
+    ACX_GCC_STRENGTH_REDUCE(CFLAGS="$CFLAGS -fno-strength-reduce")
+
+    dnl **** some arch-specific optimizations/settings for gcc
+    case "${host}" in
+      i486-*) CPU_FLAGS="-m486";;
+      i586-*) ACX_CHECK_CC_FLAGS(-mcpu=pentium,cpu_pentium,
+                 [CPU_FLAGS=-mcpu=pentium],
+                 [ACX_CHECK_CC_FLAGS(-mpentium,pentium,
+                         [CPU_FLAGS=-mpentium], [CPU_FLAGS=-m486])])
+              ;;
+      i686-*) ACX_CHECK_CC_FLAGS(-mcpu=pentiumpro,cpu_pentiumpro,
+                 [CPU_FLAGS=-mcpu=pentiumpro],
+                 [ACX_CHECK_CC_FLAGS(-mpentiumpro,pentiumpro,
+                         [CPU_FLAGS=-mpentiumpro], [CPU_FLAGS=-m486])])
+              ;;
+    esac
+
+    CFLAGS="$CPU_FLAGS $CFLAGS"
+  else
+    case "${host}" in
+      alpha*-dec-osf4.*)
+        CFLAGS="-std1 -w0"
+        OPTIMIZE="-O2"
+        DEBUG="-g3 -O2"
+        ;;
+      hppa*-hp-hpux*)
+        CFLAGS="-Aa -D_HPUX_SOURCE"
+        OPTIMIZE="-O"
+        DEBUG="-g -O"
+        ;;
+      mips-sgi-irix6.[[4-9]]*)
+        CFLAGS="-w"
+        OPTIMIZE="-O2 -OPT:Olimit=0"
+        DEBUG="-g3 -O2 -OPT:Olimit=0"
+        ;;
+      mips-sgi-irix*)
+        CFLAGS="-fullwarn -woff 835"
+        OPTIMIZE="-O2 -Olimit 3500"
+        ;;
+      rs6000-ibm-aix*)
+        CFLAGS="-D_ALL_SOURCE"
+        OPTIMIZE="-O2"
+        DEBUG="-g -O2"
+        ;;
+      *)
+        CFLAGS=""
+        OPTIMIZE="-O"
+        DEBUG="-g"
+        ;;
+    esac
+  fi
+fi
+
+case $debug in
+  true) CFLAGS="$DEBUG $CFLAGS";;
+  *) CFLAGS="$OPTIMIZE $CFLAGS";;
+esac
+
+dnl **** .exe/.obj file extensions
+AC_EXEEXT
+AC_OBJEXT
+
+OBJEXT=".$OBJEXT"
+
+AC_PROG_MAKE_SET
+
+dnl **** Checks for programs.
+AC_CHECK_PROG(AR, ar, ar, NONE)
+if test "$AR" = "NONE"; then
+  AC_MSG_ERROR(--> Can't find \`ar'!)
+  AC_CACHE_SAVE
+  exit 1
+fi
+
+AC_PROG_INSTALL
+case "x$INSTALL" in
+   x/*) ;;
+   *) INSTALL=`pwd`/ac-tools/"shtool install -c" ;
+esac
+
+MKINSTALLDIRS=`pwd`/ac-tools/"shtool mkdir -p -f"
+
+dnl **** Final list of subdirs
+SUBDIRS="src AtomTypes"
+
+dnl **** Create Make.conf
+AC_OUTPUT(Make.conf:ac-tools/Make.conf.in)

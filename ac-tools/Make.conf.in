@@ -1,0 +1,60 @@
+# No make rules by default
+.SUFFIXES:
+
+# Extension of object files
+O=@OBJEXT@
+
+# Extension of executables
+EXE=@EXEEXT@
+
+# Bourn shell
+SHELL=/bin/sh
+
+# Path prefix for installation links
+PREFIX=@prefix@
+
+# List of subdirectories
+SUBDIRS=@SUBDIRS@
+
+# Location of the oopse home
+XYZ2POV_HOME=@XYZ2POV_HOME@
+
+ATOMTYPES_DIR=@XYZ2POV_HOME@/share/AtomTypes/
+SAMPLE_DIR=@XYZ2POV_HOME@/share/samples/
+
+# C compiler
+CC=@CC@
+
+# C++ compiler
+
+CXX=@CXX@
+
+# ar
+AR=@AR@
+
+# ranlib
+RANLIB=@RANLIB@
+
+# rm
+RM=rm -f
+
+# soft link
+LN_S=@LN_S@
+
+# BSD install
+INSTALL=@INSTALL@
+INSTALL_PROGRAM=@INSTALL_PROGRAM@
+INSTALL_DATA=@INSTALL_DATA@
+MKINSTALLDIRS=@MKINSTALLDIRS@
+
+# CPP flags
+CPPFLAGS=@CPPFLAGS@
+
+# C flags
+CFLAGS_C=@CFLAGS@
+
+# C++ flags
+CXXFLAGS_C=@CXXFLAGS@
+
+# LDFLAGS
+LDFLAGS=@LDFLAGS@
