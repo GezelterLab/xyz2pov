@@ -161,7 +161,7 @@ esac
 MKINSTALLDIRS=`pwd`/ac-tools/"shtool mkdir -p -f"
 
 dnl **** Final list of subdirs
-SUBDIRS="src AtomTypes"
+SUBDIRS="src AtomTypes scripts"
 
 dnl **** Create Make.conf
 AC_OUTPUT(Make.conf:ac-tools/Make.conf.in)

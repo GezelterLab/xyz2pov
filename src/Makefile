@@ -101,7 +101,7 @@ $(XYZ2POV_HOME)/bin/$(XYZ2POV) : $(XYZ2POV)
 
 links : $(XYZ2POV_HOME)/bin/$(XYZ2POV)
 	$(MKINSTALLDIRS) $(PREFIX)/bin
-	cd $(PREFIX)/bin; $(RM) $(XYZ2POV); $(LN_S) $(XYZ2POV_HOME)/bin/$(XYZ2POV) $(XYZ2POV)
+	cd $(PREFIX)/bin; $(LN_S) -f $(XYZ2POV_HOME)/bin/$(XYZ2POV) $(XYZ2POV)
 
 # cleaning
 
