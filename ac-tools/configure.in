@@ -34,18 +34,18 @@ AC_ARG_ENABLE(xyz2pov-home,
 [XYZ2POV_HOME="${enableval}"])
 
 dnl **** define C compiler
-CC=${CC-icc}
+CC=${CC-gcc}
 AC_ARG_WITH(cc,
-[  --with-cc=PROG               use PROG as C compiler [${CC-icc}]],
+[  --with-cc=PROG               use PROG as C compiler [${CC-gcc}]],
 [CC="${withval}"])
-AC_PROG_CC([icc gcc cc])
+AC_PROG_CC([gcc cc])
 
 dnl **** define C compiler
-CXX=${CXX-icc}
+CXX=${CXX-g++}
 AC_ARG_WITH(cxx,
-[  --with-cxx=PROG               use PROG as C++ compiler [${CXX-icc}]],
+[  --with-cxx=PROG               use PROG as C++ compiler [${CXX-g++}]],
 [CXX="${withval}"])
-AC_PROG_CXX([icc g++ c++])
+AC_PROG_CXX([g++ c++])
 
 dnl **** check if user wants to compile with debugging support
 AC_ARG_ENABLE(debug,
