@@ -5,11 +5,18 @@ struct coords{
   double x;
   double y;
   double z;
+  int hasCharge;
+  double charge;
+  int hasVector;
+  double ux;
+  double uy;
+  double uz;
   char name[30];
 };
 
 extern void pov_write(FILE *out_file, struct coords *the_coords, int n_atoms, 
-		      int d_hydrogens, int d_bonds, int d_atoms);
+		      int d_hydrogens, int d_bonds, int d_atoms, 
+                      int d_vectors);
 
 extern void make_header_macros(FILE *out_file);
 

@@ -24,10 +24,12 @@ char *program_name; /*the name of the program */
 int draw_bonds = 0; /* boolean to draw bonds or not */
 int draw_hydrogens = 0; /*boolean to draw hydrogens */
 int draw_atoms = 0; /*boolean to draw atoms */
+int draw_vectors = 0; /*boolean to draw vectors */
 int draw_box = 0;  // boolean to draw the periodic Box
 int regenerateBonds = 0; // boolean to regenearate bonds each frame
 
 void usage(void);
+int count_tokens(char *line, char *delimiters);
 
 int main(argc, argv)
      int argc;
@@ -47,6 +49,7 @@ int main(argc, argv)
   double small_x = 0;
   double small_y = 0; /* lets me know the smallest x, y, z */
   double small_z = 0;
+  int extremaSet = 0;
   double rsqr; /* the square of the diagonal */
   double diagonal; /* the diagonal length of the sim box */
 
@@ -66,6 +69,7 @@ int main(argc, argv)
   char current_flag;
   int nFrames;
   int nZeroes;
+  int nTokens;
   double count;
 
   int startFrame = 1;
@@ -180,6 +184,12 @@ int main(argc, argv)
 	    // -a => draw the atoms
 
 	    draw_atoms = 1;
+	    break;
+
+	  case 'v':
+	    // -v => draw the vectors
+
+	    draw_vectors = 1;
 	    break;
 
 	  case 'r':
@@ -380,44 +390,66 @@ int main(argc, argv)
 	exit(8);
       }
 
-      foo = strtok(read_buffer, " ,;\t");
-      if(foo == NULL){
-	printf("error in reading atom %d name\n", i);
-	exit(8);
+      nTokens = count_tokens(read_buffer, " ,;\t");
+
+      if (nTokens < 4) {
+        printf("Not enough tokens while parsing file at atom %d\n", i);
+        exit(8);
       }
+
+      foo = strtok(read_buffer, " ,;\t");
       (void)strcpy(current_frame->r[i].name, foo); /*copy the atom name */
 
-      /* next we grab the positions */
-      
       foo = strtok(NULL, " ,;\t");
-      if(foo == NULL){
-	printf("error in reading atom %d position x\n", i);
-	exit(8);
-      }
       (void)sscanf(foo, "%lf",&current_frame->r[i].x);
-      if(current_frame->r[i].x > big_x) big_x = current_frame->r[i].x;
-      if(current_frame->r[i].x < small_x) small_x = current_frame->r[i].x;
-            
-  
       foo = strtok(NULL, " ,;\t");
-      if(foo == NULL){
-	printf("error in reading atom %d position y\n", i);
-	exit(8);
-      }
       (void)sscanf(foo, "%lf", &current_frame->r[i].y);
-      if(current_frame->r[i].y > big_y) big_y = current_frame->r[i].y;
-      if(current_frame->r[i].y < small_y) small_y = current_frame->r[i].y;
-
-
       foo = strtok(NULL, " ,;\t");
-      if(foo == NULL){
-	printf("error in reading atom %d position z\n", i);
-	exit(8);
-      }
       (void)sscanf(foo, "%lf", &current_frame->r[i].z);
-      if(current_frame->r[i].z > big_z) big_z = current_frame->r[i].z;
-      if(current_frame->r[i].z < small_z) small_z = current_frame->r[i].z;
 
+      if (extremaSet) {
+        if(current_frame->r[i].x > big_x) big_x = current_frame->r[i].x;
+        if(current_frame->r[i].x < small_x) small_x = current_frame->r[i].x;
+        
+        if(current_frame->r[i].y > big_y) big_y = current_frame->r[i].y;
+        if(current_frame->r[i].y < small_y) small_y = current_frame->r[i].y;
+        
+        if(current_frame->r[i].z > big_z) big_z = current_frame->r[i].z;
+        if(current_frame->r[i].z < small_z) small_z = current_frame->r[i].z;
+      } else {
+        big_x = current_frame->r[i].x;
+        small_x = current_frame->r[i].x;
+        
+        big_y = current_frame->r[i].y;
+        small_y = current_frame->r[i].y;
+        
+        big_z = current_frame->r[i].z;
+        small_z = current_frame->r[i].z;
+
+        extremaSet = 1;
+
+      }
+
+      if (nTokens == 5 || nTokens > 7) {
+        foo = strtok(NULL, " ,;\t");
+        (void)sscanf(foo, "%lf", &current_frame->r[i].charge);
+        current_frame->r[i].hasCharge = 1;
+      } else {
+        current_frame->r[i].hasCharge = 0;
+      }
+
+      
+      if (nTokens >= 7) {
+        foo = strtok(NULL, " ,;\t");
+        (void)sscanf(foo, "%lf", &current_frame->r[i].ux);
+        foo = strtok(NULL, " ,;\t");
+        (void)sscanf(foo, "%lf", &current_frame->r[i].uy);
+        foo = strtok(NULL, " ,;\t");
+        (void)sscanf(foo, "%lf", &current_frame->r[i].uz);
+        current_frame->r[i].hasVector = 1;
+      } else {
+        current_frame->r[i].hasVector = 0;
+      }
     }
     currentCount++;
     
@@ -484,10 +516,35 @@ int main(argc, argv)
 	    out_coords[j].x = temp_frame->r[j].x + dx * (i+1);
 	    out_coords[j].y = temp_frame->r[j].y + dy * (i+1);
 	    out_coords[j].z = temp_frame->r[j].z + dz * (i+1);
+
+            if (current_frame->r[j].hasVector) {              
+              dx = current_frame->r[j].ux - temp_frame->r[j].ux;
+              dy = current_frame->r[j].uy - temp_frame->r[j].uy;
+              dz = current_frame->r[j].uz - temp_frame->r[j].uz;
+              
+              dx /= (double)(n_interpolate + 1);
+              dy /= (double)(n_interpolate + 1);
+              dz /= (double)(n_interpolate + 1);
+              
+              out_coords[j].hasVector = current_frame->r[j].hasVector;
+              out_coords[j].ux = temp_frame->r[j].ux + dx * (i+1);
+              out_coords[j].uy = temp_frame->r[j].uy + dy * (i+1);
+              out_coords[j].uz = temp_frame->r[j].uz + dz * (i+1);
+            }
+
+            if (current_frame->r[j].hasCharge) {              
+              dx = current_frame->r[j].charge - temp_frame->r[j].charge;
+              
+              dx /= (double)(n_interpolate + 1);
+              
+              out_coords[j].hasCharge = current_frame->r[j].hasCharge;
+              out_coords[j].charge = temp_frame->r[j].charge + dx * (i+1);
+            }
+
 	  }
 	  
 	  pov_write(out_file, out_coords, n_atoms, draw_hydrogens, draw_bonds, 
-		    draw_atoms);
+		    draw_atoms, draw_vectors);
 	  free(out_coords);
 	  (void)fclose(out_file);
 	}
@@ -534,9 +591,21 @@ int main(argc, argv)
 	out_coords[i].x = current_frame->r[i].x;
 	out_coords[i].y = current_frame->r[i].y;
 	out_coords[i].z = current_frame->r[i].z;
+
+        if (current_frame->r[i].hasVector) {              
+          out_coords[i].hasVector = current_frame->r[i].hasVector;
+          out_coords[i].ux = current_frame->r[i].ux;
+          out_coords[i].uy = current_frame->r[i].uy;
+          out_coords[i].uz = current_frame->r[i].uz;
+        }
+
+        if (current_frame->r[i].hasCharge) {              
+          out_coords[i].hasCharge = current_frame->r[i].hasCharge;
+          out_coords[i].charge = current_frame->r[i].charge;
+        }
       }
       pov_write(out_file, out_coords, n_atoms, draw_hydrogens, draw_bonds, 
-		draw_atoms);
+		draw_atoms, draw_vectors);
       free(out_coords);
       
       (void)fclose(out_file);
@@ -621,6 +690,10 @@ int main(argc, argv)
 	    "\n"
 	    "#declare ATOM_SPHERE_FACTOR = 0.2;\n"
 	    "#declare BOND_RADIUS = 0.1;\n"
+            "#declare VECTOR_SCALE = 1.0;\n"	
+	    "#declare STICK_RADIUS = 0.5 * BOND_RADIUS;\n"
+	    "#declare CONE_RADIUS = 2.0 * STICK_RADIUS;\n"
+            "#declare CONE_FRACTION = 0.15;\n"
 	    "\n"
 	    "// declare camera, light, and system variables\n"
 	    "\n"
@@ -982,6 +1055,7 @@ void usage(){
 		"   -h            draw hydrogens\n"
 		"   -b            draw bonds\n"
 		"   -a            draw atoms\n"
+		"   -v            draw vectors\n"
 		"   -p            draw periodic box\n"
 		"   -r            regenerate bond\n"
 		"   -f <#>        render frame <#> only\n"
@@ -990,4 +1064,26 @@ void usage(){
 		"\n",
 		program_name);
   exit(8);
+}
+
+int count_tokens(line, delimiters)
+     /* PURPOSE: RETURN A COUNT OF THE NUMBER OF TOKENS ON THE LINE. */
+     char *line;		/* LINE CONTAINING TOKENS. */
+     char *delimiters;	/* POSSIBLE TOKEN DELIMITERS TO USE. */
+{
+  char *working_line;	/* WORKING COPY OF LINE. */
+  int ntokens;		/* NUMBER OF TOKENS FOUND IN LINE. */
+  char *strtok_ptr;	/* POINTER FOR STRTOK. */
+  
+  strtok_ptr= working_line= strdup(line);
+  
+  ntokens=0;
+  while (strtok(strtok_ptr,delimiters)!=NULL)
+    {
+      ntokens++;
+      strtok_ptr=NULL;
+    }
+  
+  free(working_line);
+  return(ntokens);
 }

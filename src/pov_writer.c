@@ -27,7 +27,7 @@ void initBondList(void){
 }
 
 void pov_write(FILE *out_file, struct coords *the_coords, int n_atoms,
-	       int d_hydrogens, int d_bonds, int d_atoms){
+	       int d_hydrogens, int d_bonds, int d_atoms, int d_vectors){
 
   int i,j; /*loop counters */
   int skip_atom, skip_bond, test1, test2; /*booleans */
@@ -47,17 +47,17 @@ void pov_write(FILE *out_file, struct coords *the_coords, int n_atoms,
 	    "//************************************************************\n"
 	    "\n"
 	    "\n");
-
+    
     for(i = 0; i < n_atoms; i++){
       
-      skip_atom = 0;
+      skip_atom = 0;     
       
       if(!d_hydrogens){
 	skip_atom = !strcmp("H", the_coords[i].name);
       }
       
-      if(!skip_atom){
-	
+      if(!skip_atom){	       
+        
 	fprintf(out_file, 
 		"make_%s_atom( %lf, %lf, %lf )\n",
 		the_coords[i].name,
@@ -66,13 +66,42 @@ void pov_write(FILE *out_file, struct coords *the_coords, int n_atoms,
 		the_coords[i].y);
       }
     }
-    
+
     fprintf(out_file,
 	    "\n"
 	    "\n");
-    
   }
-  
+
+      
+  if (d_vectors) {
+
+    fprintf(out_file,
+	    "//************************************************************\n"
+	    "// The list of vectors\n"
+	    "//************************************************************\n"
+	    "\n"
+	    "\n");
+    
+    for(i = 0; i < n_atoms; i++){
+      
+      if (the_coords[i].hasVector) {
+        fprintf(out_file,
+                "make_%s_vector(%lf, %lf, %lf, %lf, %lf, %lf)\n",
+                the_coords[i].name,
+                the_coords[i].x,
+                the_coords[i].z,
+                the_coords[i].y,
+                the_coords[i].ux,
+                the_coords[i].uz,
+                the_coords[i].uy);
+      }
+    }
+    
+    fprintf(out_file,
+            "\n"
+            "\n");
+  }
+      
   if(d_bonds){
     
     fprintf(out_file,
@@ -326,6 +355,82 @@ void make_header_macros(FILE *out_file){
 	    "    }\n"
 	    "  }\n"
 	    "#end\n"
+	    "#macro make_%s_vector "
+	    "(center_x, center_y, center_z, ux, uy, uz)\n"
+	    "\n"
+            "  #local vx = VECTOR_SCALE * ux;\n"
+            "  #local vy = VECTOR_SCALE * uy;\n"
+            "  #local vz = VECTOR_SCALE * uz;\n"
+	    "  #local x1 = center_x - 0.5 * vx;\n"
+	    "  #local y1 = center_y - 0.5 * vy;\n"
+	    "  #local z1 = center_z - 0.5 * vz;\n"
+	    "  #local x2 = center_x + 0.5 * vx;\n"
+	    "  #local y2 = center_y + 0.5 * vy;\n"
+	    "  #local z2 = center_z + 0.5 * vz;\n"
+            "  #local v2 = vx*vx + vy*vy + vz*vz;\n"
+            "  #local vl  = sqrt(v2);\n"
+	    "  #local x3 = x1 + vx * (1.0 - CONE_FRACTION);\n"
+	    "  #local y3 = y1 + vy * (1.0 - CONE_FRACTION);\n"
+	    "  #local z3 = z1 + vz * (1.0 - CONE_FRACTION);\n"
+	    "\n"
+	    "  #if(ROTATE)\n"
+ 	    "    #local x1_new = A11 * x1 + A12 * y1 + A13 * z1;\n"
+	    "    #local y1_new = A21 * x1 + A22 * y1 + A23 * z1;\n"
+	    "    #local z1_new = A31 * x1 + A32 * y1 + A33 * z1;\n"
+	    "\n"
+ 	    "    #local x2_new = A11 * x2 + A12 * y2 + A13 * z2;\n"
+	    "    #local y2_new = A21 * x2 + A22 * y2 + A23 * z2;\n"
+	    "    #local z2_new = A31 * x2 + A32 * y2 + A33 * z2;\n"
+	    "\n"
+ 	    "    #local x3_new = A11 * x3 + A12 * y3 + A13 * z3;\n"
+	    "    #local y3_new = A21 * x3 + A22 * y3 + A23 * z3;\n"
+	    "    #local z3_new = A31 * x3 + A32 * y3 + A33 * z3;\n"
+	    "\n"
+	    "  #else\n"
+ 	    "    #local x1_new = x1;"
+	    "    #local y1_new = y1;"
+	    "    #local z1_new = z1;"
+	    "\n"
+ 	    "    #local x2_new = x2;"
+	    "    #local y2_new = y2;"
+	    "    #local z2_new = z2;"
+	    "\n"
+ 	    "    #local x3_new = x3;"
+	    "    #local y3_new = y3;"
+	    "    #local z3_new = z3;"
+	    "\n"
+	    "  #end\n"
+	    "\n"
+	    "  cylinder{\n"
+	    "    < x1_new, y1_new, z1_new >,\n"
+	    "    < x3_new, y3_new, z3_new >,\n"
+	    "    STICK_RADIUS\n"
+	    "    texture{\n"
+	    "      pigment{ rgb < %lf, %lf, %lf > }\n"
+	    "      finish{\n"
+	    "        ambient .2\n"
+	    "        diffuse .6\n"
+	    "        specular 1\n"
+	    "        roughness .001\n"
+	    "        metallic\n"
+	    "      }\n"
+	    "    }\n"
+	    "  }\n"
+	    "  cone{\n"
+	    "    < x2_new, y2_new, z2_new >, 0.0\n"
+	    "    < x3_new, y3_new, z3_new >, CONE_RADIUS\n"
+	    "    texture{\n"
+	    "      pigment{ rgb < %lf, %lf, %lf > }\n"
+	    "      finish{\n"
+	    "        ambient .2\n"
+	    "        diffuse .6\n"
+	    "        specular 1\n"
+	    "        roughness .001\n"
+	    "        metallic\n"
+	    "      }\n"
+	    "    }\n"
+	    "  }\n"
+	    "#end\n"
 	    "\n"
 	    "\n",
 	    name,
@@ -333,6 +438,9 @@ void make_header_macros(FILE *out_file){
 	    red, green, blue,
 	    name,
 	    radius,
+	    red, green, blue,
+	    name,
+	    red, green, blue,
 	    red, green, blue);
     
     current_type = current_type->next;
