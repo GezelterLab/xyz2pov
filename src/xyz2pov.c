@@ -16,7 +16,7 @@
 
 struct linked_xyz{
   struct coords *r;
-  double boxX, boxY, boxZ;
+  double Hmat[3][3];
   struct linked_xyz *next;
 };
 
@@ -37,7 +37,7 @@ int main(argc, argv)
 
   struct coords *out_coords;
 
-  int i,j; /* loop counters */
+  int i,j,k; /* loop counters */
   mode_t dir_mode = S_IRWXU;
 
   int generate_header = 0; /* boolean for generating the pov ray header */
@@ -79,6 +79,7 @@ int main(argc, argv)
   
   unsigned int n_interpolate = 0; /* number of frames to interpolate */
   double dx, dy, dz; /* temp variables for interpolating distances */
+  double dm[3][3];
   
 
   char pov_dir[500]; /* the pov_dir */
@@ -311,21 +312,64 @@ int main(argc, argv)
 	printf("error in reading file\n");
 	exit(8);
       }
-      current_frame->boxX = atof( foo );
+      current_frame->Hmat[0][0] = atof( foo );
 
       foo = strtok(NULL, " ,;\t");
       if(foo == NULL){
 	printf("error in reading file\n");
 	exit(8);
       }
-      current_frame->boxY = atof( foo );
+      current_frame->Hmat[1][0] = atof( foo );
 
       foo = strtok(NULL, " ,;\t");
       if(foo == NULL){
 	printf("error in reading file\n");
 	exit(8);
       }
-      current_frame->boxZ = atof( foo );
+      current_frame->Hmat[2][0] = atof( foo );
+
+      foo = strtok(NULL, " ,;\t");
+      if(foo == NULL){
+	printf("error in reading file\n");
+	exit(8);
+      }
+      current_frame->Hmat[0][1] = atof( foo );
+
+      foo = strtok(NULL, " ,;\t");
+      if(foo == NULL){
+	printf("error in reading file\n");
+	exit(8);
+      }
+      current_frame->Hmat[1][1] = atof( foo );
+
+      foo = strtok(NULL, " ,;\t");
+      if(foo == NULL){
+	printf("error in reading file\n");
+	exit(8);
+      }
+      current_frame->Hmat[2][1] = atof( foo );
+
+      foo = strtok(NULL, " ,;\t");
+      if(foo == NULL){
+	printf("error in reading file\n");
+	exit(8);
+      }
+      current_frame->Hmat[0][2] = atof( foo );
+
+      foo = strtok(NULL, " ,;\t");
+      if(foo == NULL){
+	printf("error in reading file\n");
+	exit(8);
+      }
+      current_frame->Hmat[1][2] = atof( foo );
+
+      foo = strtok(NULL, " ,;\t");
+      if(foo == NULL){
+	printf("error in reading file\n");
+	exit(8);
+      }
+      current_frame->Hmat[2][2] = atof( foo );
+
     }
 
     for( i=0; i < n_atoms; i++){
@@ -401,20 +445,26 @@ int main(argc, argv)
 			"#include \"pov_header.pov\"\n"
 			"\n");
 	  if( draw_box ){
-	    dx = current_frame->boxX - temp_frame->boxX;
-	    dy = current_frame->boxY - temp_frame->boxY;
-	    dz = current_frame->boxZ - temp_frame->boxZ;
-	    
-	    dx /= (double)(n_interpolate + 1);
-	    dy /= (double)(n_interpolate + 1);
-	    dz /= (double)(n_interpolate + 1);
-	    
+
+            for (j = 0; j < 3; j++) {
+              for (k = 0; k < 3; k++) {
+                dm[j][k] = current_frame->Hmat[j][k] - temp_frame->Hmat[j][k];
+                dm[j][k] /= (double)(n_interpolate + 1);
+              }
+            }
+                	    
 	    fprintf( out_file,
-		     "makePeriodicBox( %lf, %lf, %lf )\n"
+		     "makePeriodicBox( %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf)\n"
 		     "\n",
-		     temp_frame->boxX + dx * (i+1),
-		     temp_frame->boxZ + dz * (i+1),
-		     temp_frame->boxY + dy * (i+1) );
+                     temp_frame->Hmat[0][0] + dm[0][0] * (i+1),
+                     temp_frame->Hmat[1][0] + dm[1][0] * (i+1),
+                     temp_frame->Hmat[2][0] + dm[2][0] * (i+1),
+                     temp_frame->Hmat[0][1] + dm[0][1] * (i+1),
+                     temp_frame->Hmat[1][1] + dm[1][1] * (i+1),
+                     temp_frame->Hmat[2][1] + dm[2][1] * (i+1),
+                     temp_frame->Hmat[0][2] + dm[0][2] * (i+1),
+                     temp_frame->Hmat[1][2] + dm[1][2] * (i+1),
+                     temp_frame->Hmat[2][2] + dm[2][2] * (i+1) );
 	  }
 	  
 	  
@@ -461,11 +511,17 @@ int main(argc, argv)
       if( draw_box ){
 	
 	fprintf( out_file,
-		 "makePeriodicBox( %lf, %lf, %lf )\n"
+		 "makePeriodicBox( %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf %lf )\n"
 		 "\n",
-		 current_frame->boxX,
-		 current_frame->boxZ,
-		 current_frame->boxY );
+		 current_frame->Hmat[0][0],
+		 current_frame->Hmat[1][0],
+		 current_frame->Hmat[2][0],
+		 current_frame->Hmat[0][1],
+		 current_frame->Hmat[1][1],
+		 current_frame->Hmat[2][1],
+		 current_frame->Hmat[0][2],
+		 current_frame->Hmat[1][2],
+		 current_frame->Hmat[2][2] );
       }
       
       
@@ -651,11 +707,32 @@ int main(argc, argv)
 	    "// declare the periodic box macro\n"
 	    "//************************************************************\n"
 	    "\n"
-	    "#macro makePeriodicBox( lengthX, lengthY, lengthZ )\n"
+	    "#macro makePeriodicBox( bx1, by1, bz1, bx2, by2, bz2, bx3, by3, bz3 )\n"
 	    "\n"
-	    "  #local addX = lengthX / 2.0;\n"
-	    "  #local addY = lengthY / 2.0;\n"
-	    "  #local addZ = lengthZ / 2.0;\n"
+	    "  #local pAx = -boxCenterX;\n"
+	    "  #local pAy = -boxCenterY;\n"
+	    "  #local pAz = -boxCenterZ;\n"
+	    "  #local pBx = bx1 - boxCenterX;\n"
+	    "  #local pBy = by1 - boxCenterY;\n"
+	    "  #local pBz = bz1 - boxCenterZ;\n"
+	    "  #local pCx = bx2 - boxCenterX;\n"
+	    "  #local pCy = by2 - boxCenterY;\n"
+	    "  #local pCz = bz2 - boxCenterZ;\n"
+	    "  #local pDx = bx3 - boxCenterX;\n"
+	    "  #local pDy = by3 - boxCenterY;\n"
+	    "  #local pDz = bz3 - boxCenterZ;\n"
+	    "  #local pEx = bx1 + bx2 - boxCenterX;\n"
+	    "  #local pEy = by1 + by2 - boxCenterY;\n"
+	    "  #local pEz = bz1 + bz2 - boxCenterZ;\n"
+	    "  #local pFx = bx1 + bx3 - boxCenterX;\n"
+	    "  #local pFy = by1 + by3 - boxCenterY;\n"
+	    "  #local pFz = bz1 + bz3 - boxCenterZ;\n"
+	    "  #local pGx = bx2 + bx3 - boxCenterX;\n"
+	    "  #local pGy = by2 + by3 - boxCenterY;\n"
+	    "  #local pGz = bz2 + bz3 - boxCenterZ;\n"
+	    "  #local pHx = bx1 + bx2 + bx3 - boxCenterX;\n"
+	    "  #local pHy = by1 + by2 + by3 - boxCenterY;\n"
+	    "  #local pHz = bz1 + bz2 + bz3 - boxCenterZ;\n"
 	    "\n"
 	    "  #local colorR = 0.90;\n"
 	    "  #local colorG = 0.91;\n"
@@ -665,8 +742,8 @@ int main(argc, argv)
 	    "\n"
 	    "  // 1\n"
 	    "  cylinder{\n"
-	    "    < boxCenterX-addX, boxCenterY-addY, boxCenterZ-addZ >,\n"
-	    "    < boxCenterX-addX, boxCenterY+addY, boxCenterZ-addZ >,\n"
+	    "    < pAx, pAy, pAz >,\n"
+	    "    < pBx, pBy, pBz >,\n"
 	    "    pipeWidth\n"
 	    "    texture{\n"
 	    "      pigment{ rgb < colorR, colorG, colorB > }\n"
@@ -682,8 +759,8 @@ int main(argc, argv)
 	    "\n"
 	    "  // 2\n"
 	    "  cylinder{\n"
-	    "    < boxCenterX-addX, boxCenterY-addY, boxCenterZ+addZ >,\n"
-	    "    < boxCenterX-addX, boxCenterY+addY, boxCenterZ+addZ >,\n"
+	    "    < pAx, pAy, pAz >,\n"
+	    "    < pCx, pCy, pCz >,\n"
 	    "    pipeWidth\n"
 	    "    texture{\n"
 	    "      pigment{ rgb < colorR, colorG, colorB > }\n"
@@ -699,8 +776,8 @@ int main(argc, argv)
 	    "\n"
 	    "  // 3\n"
 	    "  cylinder{\n"
-	    "    < boxCenterX+addX, boxCenterY-addY, boxCenterZ-addZ >,\n"
-	    "    < boxCenterX+addX, boxCenterY+addY, boxCenterZ-addZ >,\n"
+	    "    < pAx, pAy, pAz >,\n"
+	    "    < pDx, pDy, pDz >,\n"
 	    "    pipeWidth\n"
 	    "    texture{\n"
 	    "      pigment{ rgb < colorR, colorG, colorB > }\n"
@@ -716,8 +793,8 @@ int main(argc, argv)
 	    "\n"
 	    "  // 4\n"
 	    "  cylinder{\n"
-	    "    < boxCenterX+addX, boxCenterY-addY, boxCenterZ+addZ >,\n"
-	    "    < boxCenterX+addX, boxCenterY+addY, boxCenterZ+addZ >,\n"
+	    "    < pBx, pBy, pBz >,\n"
+	    "    < pEx, pEy, pEz >,\n"
 	    "    pipeWidth\n"
 	    "    texture{\n"
 	    "      pigment{ rgb < colorR, colorG, colorB > }\n"
@@ -733,8 +810,8 @@ int main(argc, argv)
 	    "\n"
 	    "  // 5\n"
 	    "  cylinder{\n"
-	    "    < boxCenterX-addX, boxCenterY-addY, boxCenterZ-addZ >,\n"
-	    "    < boxCenterX-addX, boxCenterY-addY, boxCenterZ+addZ >,\n"
+	    "    < pCx, pCy, pCz >,\n"
+	    "    < pEx, pEy, pEz >,\n"
 	    "    pipeWidth\n"
 	    "    texture{\n"
 	    "      pigment{ rgb < colorR, colorG, colorB > }\n"
@@ -750,8 +827,8 @@ int main(argc, argv)
 	    "\n"
 	    "  // 6\n"
 	    "  cylinder{\n"
-	    "    < boxCenterX-addX, boxCenterY-addY, boxCenterZ+addZ >,\n"
-	    "    < boxCenterX+addX, boxCenterY-addY, boxCenterZ+addZ >,\n"
+	    "    < pBx, pBy, pBz >,\n"
+	    "    < pFx, pFy, pFz >,\n"
 	    "    pipeWidth\n"
 	    "    texture{\n"
 	    "      pigment{ rgb < colorR, colorG, colorB > }\n"
@@ -767,8 +844,8 @@ int main(argc, argv)
 	    "\n"
 	    "  // 7\n"
 	    "  cylinder{\n"
-	    "    < boxCenterX+addX, boxCenterY-addY, boxCenterZ+addZ >,\n"
-	    "    < boxCenterX+addX, boxCenterY-addY, boxCenterZ-addZ >,\n"
+	    "    < pCx, pCy, pCz >,\n"
+	    "    < pGx, pGy, pGz >,\n"
 	    "    pipeWidth\n"
 	    "    texture{\n"
 	    "      pigment{ rgb < colorR, colorG, colorB > }\n"
@@ -784,8 +861,8 @@ int main(argc, argv)
 	    "\n"
 	    "  // 8\n"
 	    "  cylinder{\n"
-	    "    < boxCenterX+addX, boxCenterY-addY, boxCenterZ-addZ >,\n"
-	    "    < boxCenterX-addX, boxCenterY-addY, boxCenterZ-addZ >,\n"
+	    "    < pDx, pDy, pDz >,\n"
+	    "    < pGx, pGy, pGz >,\n"
 	    "    pipeWidth\n"
 	    "    texture{\n"
 	    "      pigment{ rgb < colorR, colorG, colorB > }\n"
@@ -801,8 +878,8 @@ int main(argc, argv)
 	    "\n"
 	    "  // 9\n"
 	    "  cylinder{\n"
-	    "    < boxCenterX-addX, boxCenterY+addY, boxCenterZ-addZ >,\n"
-	    "    < boxCenterX-addX, boxCenterY+addY, boxCenterZ+addZ >,\n"
+	    "    < pDx, pDy, pDz >,\n"
+	    "    < pFx, pFy, pFz >,\n"
 	    "    pipeWidth\n"
 	    "    texture{\n"
 	    "      pigment{ rgb < colorR, colorG, colorB > }\n"
@@ -818,8 +895,8 @@ int main(argc, argv)
 	    "\n"
 	    "  // 10\n"
 	    "  cylinder{\n"
-	    "    < boxCenterX-addX, boxCenterY+addY, boxCenterZ+addZ >,\n"
-	    "    < boxCenterX+addX, boxCenterY+addY, boxCenterZ+addZ >,\n"
+	    "    < pEx, pEy, pEz >,\n"
+	    "    < pHx, pHy, pHz >,\n"
 	    "    pipeWidth\n"
 	    "    texture{\n"
 	    "      pigment{ rgb < colorR, colorG, colorB > }\n"
@@ -835,8 +912,8 @@ int main(argc, argv)
 	    "\n"
 	    "  // 11\n"
 	    "  cylinder{\n"
-	    "    < boxCenterX+addX, boxCenterY+addY, boxCenterZ+addZ >,\n"
-	    "    < boxCenterX+addX, boxCenterY+addY, boxCenterZ-addZ >,\n"
+	    "    < pFx, pFy, pFz >,\n"
+	    "    < pHx, pHy, pHz >,\n"
 	    "    pipeWidth\n"
 	    "    texture{\n"
 	    "      pigment{ rgb < colorR, colorG, colorB > }\n"
@@ -852,8 +929,8 @@ int main(argc, argv)
 	    "\n"
 	    "  // 12\n"
 	    "  cylinder{\n"
-	    "    < boxCenterX+addX, boxCenterY+addY, boxCenterZ-addZ >,\n"
-	    "    < boxCenterX-addX, boxCenterY+addY, boxCenterZ-addZ >,\n"
+	    "    < pGx, pGy, pGz >,\n"
+	    "    < pHx, pHy, pHz >,\n"
 	    "    pipeWidth\n"
 	    "    texture{\n"
 	    "      pigment{ rgb < colorR, colorG, colorB > }\n"
