@@ -13,6 +13,7 @@
 
 #define POV_DIR "./pov"
 
+
 struct linked_xyz{
   struct coords *r;
   struct linked_xyz *next;
@@ -22,6 +23,7 @@ char *program_name; /*the name of the program */
 int draw_bonds = 0; /* boolean to draw bonds or not */
 int draw_hydrogens = 0; /*boolean to draw hydrogens */
 int draw_atoms = 0; /*boolean to draw atoms */
+int regenerateBonds = 0; // boolean to regenearate bonds each frame
 
 void usage(void);
 
@@ -74,7 +76,7 @@ int main(argc, argv)
 
   program_name = argv[0]; /*save the program name in case we need it*/
  
-
+ 
   for( i = 1; i < argc; i++){
     
     if(argv[i][0] =='-'){
@@ -143,6 +145,12 @@ int main(argc, argv)
 	    draw_atoms = 1;
 	    break;
 
+	  case 'r':
+	    // -r => regenerate bonds
+
+	    regenerateBonds = 1;
+	    break;
+
 	  default:
 
 	    (void)fprintf(stderr, "Bad option \"-%c\"\n", current_flag);
@@ -193,6 +201,7 @@ int main(argc, argv)
   // initialize atom type parser
   
   initializeParser();
+  initBondList();
   
   // count the number of frames 
 
@@ -527,6 +536,7 @@ void usage(){
 		"   -h            draw hydrogens\n"
 		"   -b            draw bonds\n"
 		"   -a            draw atoms\n"
+		"   -r            regenerate bond\n"
 		"\n",
 		program_name);
   exit(8);

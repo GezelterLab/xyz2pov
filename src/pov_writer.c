@@ -22,6 +22,9 @@ struct linked_bond_list *bl_head;
   
 void clean_bonds(void);
 
+void initBondList(void){
+  bl_head = NULL;
+}
 
 void pov_write(FILE *out_file, struct coords *the_coords, int n_atoms,
 	       int d_hydrogens, int d_bonds, int d_atoms){
@@ -79,7 +82,7 @@ void pov_write(FILE *out_file, struct coords *the_coords, int n_atoms,
 	    "\n"
 	    "\n");
     
-    make_bonds(the_coords, n_atoms);
+    if( bl_head == NULL ) make_bonds(the_coords, n_atoms);
     
     current_bond = bl_head->next;
     
@@ -130,7 +133,7 @@ void pov_write(FILE *out_file, struct coords *the_coords, int n_atoms,
       current_bond = current_bond->next;
     }
   
-    clean_bonds();
+    if( regenerateBonds )clean_bonds();
   }
 }
 
@@ -209,6 +212,8 @@ void clean_bonds(){
     }
     
     bl_head->next = NULL;
+    free( bl_head );
+    bl_head = NULL;
 }
 
 
