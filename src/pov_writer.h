@@ -8,9 +8,13 @@ struct coords{
   int hasCharge;
   double charge;
   int hasVector;
+  int hasSecondVector;
   double ux;
   double uy;
   double uz;
+  double vx;
+  double vy;
+  double vz;
   char name[30];
 };
 

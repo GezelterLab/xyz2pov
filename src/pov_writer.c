@@ -33,6 +33,7 @@ void pov_write(FILE *out_file, struct coords *the_coords, int n_atoms,
 
   int i,j; /*loop counters */
   int skip_atom, skip_bond, test1, test2; /*booleans */
+  int gb_atom, gbdp_atom;
   double dx, dy, dz; /* used in making the bonds */
   
   struct linked_bond_list *current_bond; /*keeps track of the linked list*/
@@ -60,15 +61,47 @@ void pov_write(FILE *out_file, struct coords *the_coords, int n_atoms,
       
       if(!skip_atom){	       
         
-	fprintf(out_file, 
-		"make_%s_atom( %lf, %lf, %lf )\n",
-		the_coords[i].name,
-		the_coords[i].x,
-		the_coords[i].z,
-		the_coords[i].y);
+        gb_atom = !strcmp("GB", the_coords[i].name);
+        gbdp_atom = !strcmp("GBDP", the_coords[i].name);
+        
+        if (gb_atom) {
+          fprintf(out_file, 
+                  "make_%s_ellipse( %lf, %lf, %lf, %lf, %lf, %lf, %lf)\n",
+                  the_coords[i].name,
+                  the_coords[i].x,
+                  the_coords[i].z,
+                  the_coords[i].y,
+                  the_coords[i].charge,
+                  the_coords[i].ux,
+                  the_coords[i].uz,
+                  the_coords[i].uy);
+        } else {
+          if (gbdp_atom) {
+            fprintf(out_file, 
+                    "make_%s_shaded_ellipse( %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf)\n",
+                    the_coords[i].name,
+                    the_coords[i].x,
+                    the_coords[i].z,
+                    the_coords[i].y,
+                    the_coords[i].charge,
+                    the_coords[i].ux,
+                    the_coords[i].uz,
+                    the_coords[i].uy,
+                    the_coords[i].vx,
+                    the_coords[i].vz,
+                    the_coords[i].vy);
+          } else {
+            fprintf(out_file, 
+                    "make_%s_atom( %lf, %lf, %lf )\n",
+                    the_coords[i].name,
+                    the_coords[i].x,
+                    the_coords[i].z,
+                    the_coords[i].y);
+          }
+        }
       }
     }
-
+    
     fprintf(out_file,
 	    "\n"
 	    "\n");
@@ -357,6 +390,153 @@ void make_header_macros(FILE *out_file){
 	    "    }\n"
 	    "  }\n"
 	    "#end\n"
+	    "#macro make_%s_ellipse "
+	    "(center_x, center_y, center_z, ecc, u_x, u_y, u_z)\n"
+	    	    "\n"
+	    "  #local x1 = center_x;\n"
+	    "  #local y1 = center_y;\n"
+	    "  #local z1 = center_z;\n"
+	    "  #local x2 = u_x;\n"
+	    "  #local y2 = u_y;\n"
+	    "  #local z2 = u_z;\n"
+	    "\n"
+	    "  #if(ROTATE)\n"
+	    "\n"
+ 	    "    #local x1_new = rotatePointX + A11 * (x1-rotatePointX) + A12 * (y1-rotatePointY) + A13 * (z1-rotatePointZ);\n"
+	    "    #local y1_new = rotatePointY + A21 * (x1-rotatePointX) + A22 * (y1-rotatePointY) + A23 * (z1-rotatePointZ);\n"
+	    "    #local z1_new = rotatePointZ + A31 * (x1-rotatePointX) + A32 * (y1-rotatePointY) + A33 * (z1-rotatePointZ);\n"
+	    "\n"
+ 	    "    #local x2_new = rotatePointX + A11 * (x2-rotatePointX) + A12 * (y2-rotatePointY) + A13 * (z2-rotatePointZ);\n"
+	    "    #local y2_new = rotatePointY + A21 * (x2-rotatePointX) + A22 * (y2-rotatePointY) + A23 * (z2-rotatePointZ);\n"
+	    "    #local z2_new = rotatePointZ + A31 * (x2-rotatePointX) + A32 * (y2-rotatePointY) + A33 * (z2-rotatePointZ);\n"
+	    "\n"
+	    "  #else\n"
+	    "\n"
+ 	    "    #local x1_new = x1;"
+	    "    #local y1_new = y1;"
+	    "    #local z1_new = z1;"
+	    "\n"
+ 	    "    #local x2_new = x2;"
+	    "    #local y2_new = y2;"
+	    "    #local z2_new = z2;"
+	    "\n"
+	    "  #end\n"
+	    "\n"
+            "    #local myUlen = sqrt(x2_new*x2_new + y2_new*y2_new + z2_new*z2_new);\n"
+            "    #local uux = x2_new / myUlen;\n"
+            "    #local uuy = y2_new / myUlen;\n"
+            "    #local uuz = z2_new / myUlen;\n"
+            "    #local myTheta = -degrees(acos(uuz));\n"
+            "    #local myPsi = -degrees(atan(uux/uuy));\n"
+            "    #local myScale = ATOM_SPHERE_FACTOR * %lf;\n"
+            "\n"
+	    "  sphere{\n"
+	    "    < 0, 0, 0 >, 1\n"
+	    "    texture{\n"
+	    "      pigment{\n"
+	    "        average\n"
+	    "        pigment_map{\n"
+	    "          [1.0 grad1]\n"
+	    "          [1.0 grad2]\n"
+	    "          [1.0 grad3]\n"
+	    "          [5.0 gradz]\n"
+	    "        }\n"
+	    "      }\n"
+	    "      finish{\n"
+	    "        ambient .2\n"
+	    "        diffuse .6\n"
+	    "        specular 1\n"
+	    "        roughness .001\n"
+	    "        metallic\n"
+	    "      }\n"
+	    "    }\n"
+	    "    scale<myScale,myScale,ecc*myScale>\n"
+            "    rotate<myTheta,0,myPsi>\n"
+            "    translate< x1_new, y1_new, z1_new>\n"
+	    "  }\n"
+	    "#end\n"
+	    "#macro make_%s_shaded_ellipse "
+	    "(center_x, center_y, center_z, ecc, u_x, u_y, u_z, v_x, v_y, v_z)\n"
+	    	    "\n"
+	    "  #local x1 = center_x;\n"
+	    "  #local y1 = center_y;\n"
+	    "  #local z1 = center_z;\n"
+	    "  #local x2 = u_x;\n"
+	    "  #local y2 = u_y;\n"
+	    "  #local z2 = u_z;\n"
+	    "  #local x3 = v_x;\n"
+	    "  #local y3 = v_y;\n"
+	    "  #local z3 = v_z;\n"
+	    "\n"
+	    "  #if(ROTATE)\n"
+	    "\n"
+ 	    "    #local x1_new = rotatePointX + A11 * (x1-rotatePointX) + A12 * (y1-rotatePointY) + A13 * (z1-rotatePointZ);\n"
+	    "    #local y1_new = rotatePointY + A21 * (x1-rotatePointX) + A22 * (y1-rotatePointY) + A23 * (z1-rotatePointZ);\n"
+	    "    #local z1_new = rotatePointZ + A31 * (x1-rotatePointX) + A32 * (y1-rotatePointY) + A33 * (z1-rotatePointZ);\n"
+	    "\n"
+ 	    "    #local x2_new = rotatePointX + A11 * (x2-rotatePointX) + A12 * (y2-rotatePointY) + A13 * (z2-rotatePointZ);\n"
+	    "    #local y2_new = rotatePointY + A21 * (x2-rotatePointX) + A22 * (y2-rotatePointY) + A23 * (z2-rotatePointZ);\n"
+	    "    #local z2_new = rotatePointZ + A31 * (x2-rotatePointX) + A32 * (y2-rotatePointY) + A33 * (z2-rotatePointZ);\n"
+	    "\n"
+ 	    "    #local x3_new = rotatePointX + A11 * (x3-rotatePointX) + A12 * (y3-rotatePointY) + A13 * (z3-rotatePointZ);\n"
+	    "    #local y3_new = rotatePointY + A21 * (x3-rotatePointX) + A22 * (y3-rotatePointY) + A23 * (z3-rotatePointZ);\n"
+	    "    #local z3_new = rotatePointZ + A31 * (x3-rotatePointX) + A32 * (y3-rotatePointY) + A33 * (z3-rotatePointZ);\n"
+	    "\n"
+	    "  #else\n"
+	    "\n"
+ 	    "    #local x1_new = x1;"
+	    "    #local y1_new = y1;"
+	    "    #local z1_new = z1;"
+	    "\n"
+ 	    "    #local x2_new = x2;"
+	    "    #local y2_new = y2;"
+	    "    #local z2_new = z2;"
+	    "\n"
+ 	    "    #local x3_new = x3;"
+	    "    #local y3_new = y3;"
+	    "    #local z3_new = z3;"
+	    "\n"
+	    "  #end\n"
+	    "\n"
+            "    #local myUlen = sqrt(x2_new*x2_new + y2_new*y2_new + z2_new*z2_new);\n"
+            "    #local uux = x2_new / myUlen;\n"
+            "    #local uuy = y2_new / myUlen;\n"
+            "    #local uuz = z2_new / myUlen;\n"
+            "    #local myVlen = sqrt(x3_new*x3_new + y3_new*y3_new + z3_new*z3_new);\n"
+            "    #local vvx = x3_new / myVlen;\n"
+            "    #local vvy = y3_new / myVlen;\n"
+            "    #local vvz = z3_new / myVlen;\n"
+            "\n"
+            "    #local myTheta = degrees(acos(uuz));\n"
+            "    #local myPsi = -degrees(atan(uux/uuy));\n"
+            "    #local myPhi = degrees(acos(vvz));\n"
+            "    #local myScale = ATOM_SPHERE_FACTOR * %lf;\n"
+            "\n"
+	    "  sphere{\n"
+	    "    < 0, 0, 0 >, 1\n"
+	    "    texture{\n"
+	    "      pigment{\n"
+	    "        average\n"
+	    "        pigment_map{\n"
+	    "          [1.0 grad1]\n"
+	    "          [1.0 grad2]\n"
+	    "          [1.0 grad3]\n"
+	    "          [5.0 gradz]\n"
+	    "        }\n"
+	    "      }\n"
+	    "      finish{\n"
+	    "        ambient .2\n"
+	    "        diffuse .6\n"
+	    "        specular 1\n"
+	    "        roughness .001\n"
+	    "        metallic\n"
+	    "      }\n"
+	    "    }\n"
+	    "    scale<myScale,myScale,ecc*myScale>\n"
+            "    rotate<myTheta,myPhi,myPsi>\n"
+            "    translate< x1_new, y1_new, z1_new>\n"
+	    "  }\n"
+	    "#end\n"
 	    "#macro make_%s_vector "
 	    "(center_x, center_y, center_z, ux, uy, uz)\n"
 	    "\n"
@@ -441,6 +621,10 @@ void make_header_macros(FILE *out_file){
 	    name,
 	    radius,
 	    red, green, blue,
+	    name,
+	    radius,
+	    name,
+	    radius,
 	    name,
 	    red, green, blue,
 	    red, green, blue);
