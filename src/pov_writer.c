@@ -61,8 +61,8 @@ void pov_write(FILE *out_file, struct coords *the_coords, int n_atoms,
       
       if(!skip_atom){	       
         
-        gb_atom = !strcmp("GB", the_coords[i].name);
-        gbdp_atom = !strcmp("GBDP", the_coords[i].name);
+        gb_atom = !strcmp("GBDPPCt", the_coords[i].name);
+        gbdp_atom = !strcmp("GBDPPCh", the_coords[i].name);
         
         if (gb_atom) {
           fprintf(out_file, 
@@ -71,25 +71,25 @@ void pov_write(FILE *out_file, struct coords *the_coords, int n_atoms,
                   the_coords[i].x,
                   the_coords[i].z,
                   the_coords[i].y,
-                  the_coords[i].charge,
+	          3.33,
                   the_coords[i].ux,
                   the_coords[i].uz,
                   the_coords[i].uy);
         } else {
           if (gbdp_atom) {
             fprintf(out_file, 
-                    "make_%s_shaded_ellipse( %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf, %lf)\n",
+                    "make_%s_shaded_ellipse( %lf, %lf, %lf, %lf, %lf, %lf, %lf)\n",
                     the_coords[i].name,
                     the_coords[i].x,
                     the_coords[i].z,
                     the_coords[i].y,
-                    the_coords[i].charge,
+                    1.333,
                     the_coords[i].ux,
                     the_coords[i].uz,
-                    the_coords[i].uy,
-                    the_coords[i].vx,
-                    the_coords[i].vz,
-                    the_coords[i].vy);
+                    the_coords[i].uy);
+                    //the_coords[i].vx,
+                    //the_coords[i].vz,
+                    //the_coords[i].vy);
           } else {
             fprintf(out_file, 
                     "make_%s_atom( %lf, %lf, %lf )\n",
@@ -426,7 +426,7 @@ void make_header_macros(FILE *out_file){
             "    #local uux = x2_new / myUlen;\n"
             "    #local uuy = y2_new / myUlen;\n"
             "    #local uuz = z2_new / myUlen;\n"
-            "    #local myTheta = -degrees(acos(uuz));\n"
+            "    #local myTheta = degrees(acos(uuz));\n"
             "    #local myPsi = -degrees(atan(uux/uuy));\n"
             "    #local myScale = ATOM_SPHERE_FACTOR * %lf;\n"
             "\n"
