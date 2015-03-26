@@ -1,3 +1,9 @@
+xyz2pov is a program which translates standard xyz trajectory files 
+into scripts which can be rendered with the ubiquitous PovRay 
+rendering engine.
+
+We have compiled the source code on Linux and Mac OS X with no problems.
+
 ****************************
 * To Install :             *
 ****************************
